@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "GLM-5.2 Claude Code Setup: settings.json, Backup, Rollback",
   description:
     "Use GLM-5.2 in Claude Code safely. Minimal settings.json setup, prerequisites, backup, rollback, caveats, and official docs for Claude Code users testing GLM-5.2.",
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
   alternates: {
     canonical: "/",
   },

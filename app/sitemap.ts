@@ -11,11 +11,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 1,
     },
-    {
-      url: `${siteUrl}/glm-5-2-claude-code`,
-      lastModified: "2026-06-15",
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
   ];
 }

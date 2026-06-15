@@ -68,6 +68,10 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
 
 export function LandingPage() {
   const [copied, setCopied] = useState(false);
+  const [email, setEmail] = useState("");
+  const [note, setNote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showWaitlistForm, setShowWaitlistForm] = useState(false);
   const [waitlistMessage, setWaitlistMessage] = useState("");
 
   const subtlePoints = useMemo(
@@ -142,8 +146,48 @@ export function LandingPage() {
       price_intent: "unknown",
       status: "waitlist",
     });
-    setWaitlistMessage("Thanks — waitlist form coming soon.");
-    window.setTimeout(() => setWaitlistMessage(""), 2600);
+    setShowWaitlistForm(true);
+    setWaitlistMessage("Leave your email and we will notify you when the fallback kit is ready.");
+  };
+
+  const handleWaitlistSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setWaitlistMessage("");
+
+    try {
+      const response = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          note,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(payload?.error ?? "Could not save your waitlist request.");
+      }
+
+      trackEvent("fallback_kit_waitlist_submit", {
+        event_area: "waitlist",
+        model: "glm-5.2",
+        tool: "claude-code",
+        has_note: note.trim().length > 0,
+      });
+      setEmail("");
+      setNote("");
+      setWaitlistMessage("You are on the list. We will reach out when the advanced fallback kit is ready.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not save your waitlist request.";
+      setWaitlistMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSourceClick = (label: string) => {
@@ -221,6 +265,47 @@ export function LandingPage() {
           </div>
           {waitlistMessage ? (
             <p className="mt-4 text-sm text-[var(--accent-strong)]">{waitlistMessage}</p>
+          ) : null}
+          {showWaitlistForm ? (
+            <form
+              onSubmit={handleWaitlistSubmit}
+              className="relative mt-5 grid gap-4 rounded-[1.75rem] border border-[var(--line)] bg-white/80 p-5 md:grid-cols-[1fr_1fr_auto]"
+            >
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-[var(--ink)]">
+                  Email
+                </span>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@company.com"
+                  className="w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base text-[var(--ink)] outline-none transition focus:border-[var(--accent)]"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-[var(--ink)]">
+                  What are you waiting for? (Optional)
+                </span>
+                <textarea
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder="What would make this useful for you?"
+                  rows={3}
+                  className="w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base text-[var(--ink)] outline-none transition focus:border-[var(--accent)]"
+                />
+              </label>
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-medium text-white transition hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isSubmitting ? "Saving..." : "Join Waitlist"}
+                </button>
+              </div>
+            </form>
           ) : null}
         </section>
 
