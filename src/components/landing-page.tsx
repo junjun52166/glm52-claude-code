@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
 
 const configSnippet = `{
@@ -75,6 +75,7 @@ export function LandingPage() {
   const [showWaitlistForm, setShowWaitlistForm] = useState(false);
   const [waitlistMessage, setWaitlistMessage] = useState("");
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const waitlistEmailRef = useRef<HTMLInputElement | null>(null);
 
   const subtlePoints = useMemo(
     () => [
@@ -109,6 +110,18 @@ export function LandingPage() {
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!showWaitlistForm) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    waitlistEmailRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showWaitlistForm]);
 
   const handleCopy = async () => {
     try {
@@ -154,7 +167,14 @@ export function LandingPage() {
     });
     setShowWaitlistForm(true);
     setWaitlistSubmitted(false);
-    setWaitlistMessage("Leave your email and we will notify you when the fallback kit is ready.");
+    setWaitlistMessage("");
+  };
+
+  const closeWaitlistForm = () => {
+    setShowWaitlistForm(false);
+    setWaitlistMessage("");
+    setWaitlistSubmitted(false);
+    setIsSubmitting(false);
   };
 
   const handleWaitlistSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -278,64 +298,6 @@ export function LandingPage() {
           </div>
           {copyMessage ? (
             <p className="mt-4 text-sm font-medium text-[var(--accent-strong)]">{copyMessage}</p>
-          ) : null}
-          {waitlistMessage ? (
-            <p
-              className={`mt-4 text-sm ${
-                waitlistSubmitted ? "font-semibold text-[var(--ink)]" : "text-[var(--accent-strong)]"
-              }`}
-            >
-              {waitlistMessage}
-            </p>
-          ) : null}
-          {showWaitlistForm && !waitlistSubmitted ? (
-            <form
-              onSubmit={handleWaitlistSubmit}
-              className="relative mt-5 grid gap-4 rounded-[1.75rem] border border-[var(--line)] bg-white/80 p-5 md:grid-cols-[1fr_1fr_auto]"
-            >
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-[var(--ink)]">
-                  Email
-                </span>
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="you@company.com"
-                  className="w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base text-[var(--ink)] outline-none transition focus:border-[var(--accent)]"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-[var(--ink)]">
-                  What are you waiting for? (Optional)
-                </span>
-                <textarea
-                  value={note}
-                  onChange={(event) => setNote(event.target.value)}
-                  placeholder="What would make this useful for you?"
-                  rows={3}
-                  className="w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base text-[var(--ink)] outline-none transition focus:border-[var(--accent)]"
-                />
-              </label>
-              <div className="flex items-end">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-medium text-white transition hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {isSubmitting ? "Saving..." : "Join Waitlist"}
-                </button>
-              </div>
-            </form>
-          ) : null}
-          {waitlistSubmitted ? (
-            <div className="mt-5 rounded-[1.75rem] border border-[var(--line)] bg-white/85 p-6 text-center shadow-[var(--shadow)]">
-              <p className="text-2xl font-semibold text-[var(--ink)]">You&apos;re on the list.</p>
-              <p className="mt-3 text-base leading-7 text-[var(--muted)]">
-                We&apos;ll email you when the advanced fallback kit is ready.
-              </p>
-            </div>
           ) : null}
         </section>
 
@@ -472,6 +434,91 @@ export function LandingPage() {
           </Section>
         </div>
       </div>
+      {showWaitlistForm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#201916]/55 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-2xl rounded-[2rem] border border-[var(--line)] bg-[var(--paper)] p-6 shadow-[var(--shadow)] md:p-8">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">
+                  Advanced Fallback Kit
+                </p>
+                <h2 className="mt-3 text-2xl leading-tight md:text-3xl">
+                  Join the waitlist
+                </h2>
+                <p className="mt-3 max-w-xl text-base leading-7 text-[var(--muted)]">
+                  Leave your email and we&apos;ll notify you when the fallback kit is ready.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeWaitlistForm}
+                className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-medium text-[var(--ink)] transition hover:bg-white"
+              >
+                Close
+              </button>
+            </div>
+
+            {waitlistSubmitted ? (
+              <div className="mt-6 rounded-[1.75rem] border border-[var(--line)] bg-white/90 p-6 text-center shadow-[var(--shadow)]">
+                <p className="text-2xl font-semibold text-[var(--ink)]">You&apos;re on the list.</p>
+                <p className="mt-3 text-base leading-7 text-[var(--muted)]">
+                  We&apos;ll email you when the advanced fallback kit is ready.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleWaitlistSubmit} className="mt-6 grid gap-4">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-[var(--ink)]">
+                    Email
+                  </span>
+                  <input
+                    ref={waitlistEmailRef}
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@company.com"
+                    className="w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base text-[var(--ink)] outline-none transition focus:border-[var(--accent)]"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-[var(--ink)]">
+                    What are you waiting for? (Optional)
+                  </span>
+                  <textarea
+                    value={note}
+                    onChange={(event) => setNote(event.target.value)}
+                    placeholder="What would make this useful for you?"
+                    rows={4}
+                    className="w-full rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-base text-[var(--ink)] outline-none transition focus:border-[var(--accent)]"
+                  />
+                </label>
+                {waitlistMessage ? (
+                  <p className="text-sm font-medium text-[var(--accent-strong)]">
+                    {waitlistMessage}
+                  </p>
+                ) : null}
+                <div className="flex flex-col gap-3 pt-2 md:flex-row">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-medium text-white transition hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isSubmitting ? "Saving..." : "Join Waitlist"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeWaitlistForm}
+                    className="rounded-full border border-[var(--line)] px-6 py-3 text-sm font-medium text-[var(--ink)] transition hover:bg-white"
+                  >
+                    Not now
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
