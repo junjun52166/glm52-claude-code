@@ -7,9 +7,9 @@ const siteUrl =
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "GLM-5.2 Claude Code Setup: settings.json, Backup, Rollback",
+  title: "Try GLM-5.2 in Claude Code After Fable 5 Suspension",
   description:
-    "Use GLM-5.2 in Claude Code safely. Minimal settings.json setup, prerequisites, backup, rollback, caveats, and official docs for Claude Code users testing GLM-5.2.",
+    "Fable 5 was suspended. This page shows Claude Code users how to try GLM-5.2 with a copy-ready settings.json block, backup steps, rollback steps, and official docs.",
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
@@ -17,17 +17,17 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "GLM-5.2 Claude Code Setup: settings.json, Backup, Rollback",
+    title: "Try GLM-5.2 in Claude Code After Fable 5 Suspension",
     description:
-      "Use GLM-5.2 in Claude Code safely with minimal setup notes, backup, rollback, caveats, and official docs.",
+      "A copy-ready GLM-5.2 setup note for Claude Code users with backup, rollback, and official docs.",
     url: siteUrl,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "GLM-5.2 Claude Code Setup: settings.json, Backup, Rollback",
+    title: "Try GLM-5.2 in Claude Code After Fable 5 Suspension",
     description:
-      "Minimal setup notes for Claude Code users testing GLM-5.2 through provider routing.",
+      "Copy-ready GLM-5.2 setup, backup, rollback, and docs for Claude Code users.",
   },
 };
 

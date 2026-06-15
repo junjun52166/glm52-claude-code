@@ -68,18 +68,20 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
 
 export function LandingPage() {
   const [copied, setCopied] = useState(false);
+  const [copyMessage, setCopyMessage] = useState("");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showWaitlistForm, setShowWaitlistForm] = useState(false);
   const [waitlistMessage, setWaitlistMessage] = useState("");
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
 
   const subtlePoints = useMemo(
     () => [
-      "Minimal setup note, not a migration product",
+      "A copy-ready settings.json alias block for GLM-5.2",
+      "Backup, verification, and rollback steps in one place",
       "Built for Claude Code CLI users, not normal Claude app usage",
-      "Backup and rollback included",
-      "Every key step points back to official docs",
+      "Official docs linked for every critical step",
     ],
     [],
   );
@@ -112,6 +114,7 @@ export function LandingPage() {
     try {
       await navigator.clipboard.writeText(configSnippet);
       setCopied(true);
+      setCopyMessage("Copied. Paste it into ~/.claude/settings.json.");
       trackEvent("copy_glm52_config", {
         event_area: "config",
         model: "glm-5.2",
@@ -121,8 +124,11 @@ export function LandingPage() {
         model_id: "glm-5.2[1m]",
       });
       window.setTimeout(() => setCopied(false), 2200);
+      window.setTimeout(() => setCopyMessage(""), 2600);
     } catch {
       setCopied(false);
+      setCopyMessage("Copy failed. Select the JSON block below and copy it manually.");
+      window.setTimeout(() => setCopyMessage(""), 3200);
     }
   };
 
@@ -147,6 +153,7 @@ export function LandingPage() {
       status: "waitlist",
     });
     setShowWaitlistForm(true);
+    setWaitlistSubmitted(false);
     setWaitlistMessage("Leave your email and we will notify you when the fallback kit is ready.");
   };
 
@@ -180,10 +187,12 @@ export function LandingPage() {
       });
       setEmail("");
       setNote("");
-      setWaitlistMessage("You are on the list. We will reach out when the advanced fallback kit is ready.");
+      setWaitlistSubmitted(true);
+      setWaitlistMessage("You're on the list. We will email you when the advanced fallback kit is ready.");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Could not save your waitlist request.";
+      setWaitlistSubmitted(false);
       setWaitlistMessage(message);
     } finally {
       setIsSubmitting(false);
@@ -208,25 +217,29 @@ export function LandingPage() {
           <div className="relative grid gap-8 lg:grid-cols-[1.35fr_0.85fr] lg:items-end">
             <div>
               <p className="text-xs uppercase tracking-[0.32em] text-[var(--accent)]">
-                GLM-5.2 Claude Code Setup
+                Fable 5 Suspended? Start Here
               </p>
               <h1 className="mt-4 max-w-3xl text-4xl leading-none md:text-6xl">
-                Use GLM-5.2 in Claude Code Safely
+                Try GLM-5.2 in Claude Code Without Breaking Your Setup
               </h1>
               <p className="mt-5 max-w-3xl text-lg leading-8 text-[var(--muted)] md:text-xl">
-                A minimal setup note for Claude Code users who want to test GLM-5.2
-                through provider routing. Includes prerequisites, settings.json,
-                backup, rollback, and caveats.
+                A 5-minute setup note for Claude Code users who want to test GLM-5.2
+                after Fable 5 was suspended. Copy the settings.json block, keep a
+                backup, verify the model, and roll back fast if it goes wrong.
               </p>
               <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--muted)] md:text-lg">
-                After Fable 5 access was suspended, some Claude Code users started
-                looking at GLM-5.2 as a possible third-party route. This page focuses
-                on one narrow task: how to test GLM-5.2 in Claude Code safely, with
-                prerequisites, settings.json, backup, rollback, and caveats.
+                This page is for one narrow job: if you use Claude Code CLI and need
+                a temporary Fable 5 fallback, it shows the exact GLM-5.2 alias config,
+                what else must already be set up, and how to undo the change cleanly.
+              </p>
+              <p className="mt-5 max-w-3xl rounded-[1.5rem] border border-[var(--line)] bg-white/60 px-5 py-4 text-sm leading-7 text-[var(--ink)] md:text-base">
+                Using Claude in the web app, desktop app, or mobile app? You probably
+                do not need this page. It is mainly for Claude Code CLI users editing
+                <code className="mx-1">~/.claude/settings.json</code>.
               </p>
             </div>
             <div className="rounded-[1.75rem] border border-[var(--line)] bg-[#231b18] p-5 text-[#f8eedf]">
-              <p className="text-xs uppercase tracking-[0.28em] text-[#d4ad91]">Validation Scope</p>
+              <p className="text-xs uppercase tracking-[0.28em] text-[#d4ad91]">What You Get</p>
               <ul className="mt-4 space-y-3 text-sm leading-7 md:text-base">
                 {subtlePoints.map((item) => (
                   <li
@@ -246,14 +259,14 @@ export function LandingPage() {
               onClick={handleCopy}
               className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-medium text-white transition hover:bg-[var(--accent-strong)]"
             >
-              {copied ? "Copied GLM-5.2 Config" : "Copy GLM-5.2 Config"}
+              {copied ? "Copied ✓" : "Copy GLM-5.2 Config"}
             </button>
             <button
               type="button"
               onClick={handleOfficialDocsClick}
               className="rounded-full border border-[var(--line)] bg-white/70 px-6 py-3 text-sm font-medium text-[var(--ink)] transition hover:bg-white"
             >
-              Open Official GLM-5.2 Claude Code Docs
+              Open Official Docs ↗
             </button>
             <button
               type="button"
@@ -263,10 +276,19 @@ export function LandingPage() {
               Join Waitlist for Advanced Fallback Kit
             </button>
           </div>
-          {waitlistMessage ? (
-            <p className="mt-4 text-sm text-[var(--accent-strong)]">{waitlistMessage}</p>
+          {copyMessage ? (
+            <p className="mt-4 text-sm font-medium text-[var(--accent-strong)]">{copyMessage}</p>
           ) : null}
-          {showWaitlistForm ? (
+          {waitlistMessage ? (
+            <p
+              className={`mt-4 text-sm ${
+                waitlistSubmitted ? "font-semibold text-[var(--ink)]" : "text-[var(--accent-strong)]"
+              }`}
+            >
+              {waitlistMessage}
+            </p>
+          ) : null}
+          {showWaitlistForm && !waitlistSubmitted ? (
             <form
               onSubmit={handleWaitlistSubmit}
               className="relative mt-5 grid gap-4 rounded-[1.75rem] border border-[var(--line)] bg-white/80 p-5 md:grid-cols-[1fr_1fr_auto]"
@@ -307,26 +329,34 @@ export function LandingPage() {
               </div>
             </form>
           ) : null}
+          {waitlistSubmitted ? (
+            <div className="mt-5 rounded-[1.75rem] border border-[var(--line)] bg-white/85 p-6 text-center shadow-[var(--shadow)]">
+              <p className="text-2xl font-semibold text-[var(--ink)]">You&apos;re on the list.</p>
+              <p className="mt-3 text-base leading-7 text-[var(--muted)]">
+                We&apos;ll email you when the advanced fallback kit is ready.
+              </p>
+            </div>
+          ) : null}
         </section>
 
         <div className="mt-8 grid gap-8">
-          <Section eyebrow="What This Is" title="A narrow setup memo, not a product pitch">
+          <Section eyebrow="Before You Start" title="What this page helps you do">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-[1.5rem] border border-[var(--line)] bg-white/60 p-5">
-                <h3 className="text-lg text-[var(--ink)]">This page is</h3>
+                <h3 className="text-lg text-[var(--ink)]">You can use this page to</h3>
                 <ul className="mt-3 list-disc space-y-2 pl-5">
-                  <li>A minimal GLM-5.2 Claude Code setup note</li>
-                  <li>A backup and rollback checklist</li>
-                  <li>A source-backed technical memo</li>
+                  <li>Copy a ready-to-paste GLM-5.2 alias block for Claude Code</li>
+                  <li>Check the prerequisites before you edit settings.json</li>
+                  <li>Back up, verify, and roll back safely if the test fails</li>
                 </ul>
               </div>
               <div className="rounded-[1.5rem] border border-[var(--line)] bg-white/60 p-5">
-                <h3 className="text-lg text-[var(--ink)]">This page is not</h3>
+                <h3 className="text-lg text-[var(--ink)]">This page does not do</h3>
                 <ul className="mt-3 list-disc space-y-2 pl-5">
-                  <li>An official Anthropic guide</li>
-                  <li>An official Fable 5 replacement</li>
-                  <li>A full provider setup tutorial or migration service</li>
-                  <li>An LLM cost calculator or token router</li>
+                  <li>Provider signup, billing, or API key creation</li>
+                  <li>Full routing setup for every third-party provider</li>
+                  <li>Any promise that GLM-5.2 behaves like native Anthropic models</li>
+                  <li>Migration work for normal Claude app users</li>
                 </ul>
               </div>
             </div>
