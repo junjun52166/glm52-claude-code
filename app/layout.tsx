@@ -22,12 +22,21 @@ export const metadata: Metadata = {
       "A copy-ready GLM-5.2 setup note for Claude Code users with backup, rollback, and official docs.",
     url: siteUrl,
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Try GLM-5.2 in Claude Code after Fable 5 suspension",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Try GLM-5.2 in Claude Code After Fable 5 Suspension",
     description:
       "Copy-ready GLM-5.2 setup, backup, rollback, and docs for Claude Code users.",
+    images: ["/twitter-image"],
   },
 };
 

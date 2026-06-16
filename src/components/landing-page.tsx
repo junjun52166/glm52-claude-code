@@ -153,7 +153,6 @@ export function LandingPage() {
       destination: "zai_docs",
       outbound: true,
     });
-    window.open(officialDocsUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleWaitlistClick = () => {
@@ -281,13 +280,15 @@ export function LandingPage() {
             >
               {copied ? "Copied ✓" : "Copy GLM-5.2 Config"}
             </button>
-            <button
-              type="button"
+            <a
+              href={officialDocsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
               onClick={handleOfficialDocsClick}
               className="rounded-full border border-[var(--line)] bg-white/70 px-6 py-3 text-sm font-medium text-[var(--ink)] transition hover:bg-white"
             >
               Open Official Docs ↗
-            </button>
+            </a>
             <button
               type="button"
               onClick={handleWaitlistClick}
@@ -303,6 +304,11 @@ export function LandingPage() {
 
         <div className="mt-8 grid gap-8">
           <Section eyebrow="Before You Start" title="What this page helps you do">
+            <p className="rounded-[1.5rem] border border-[var(--line)] bg-white/60 px-5 py-4 text-[var(--ink)]">
+              If you&apos;re looking for a Fable 5 alternative to run inside Claude
+              Code, this page shows how to try GLM-5.2 as a temporary replacement,
+              with backup and rollback steps.
+            </p>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-[1.5rem] border border-[var(--line)] bg-white/60 p-5">
                 <h3 className="text-lg text-[var(--ink)]">You can use this page to</h3>
