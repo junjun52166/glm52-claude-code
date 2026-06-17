@@ -39,6 +39,8 @@ export async function POST(request: Request) {
       note: body.note ?? "",
       _subject: "GLM52 Claude Code waitlist",
       _template: "table",
+      _replyto: body.email,
+      _cc: body.email,
       _captcha: "false",
     }),
   }).catch(() => null);

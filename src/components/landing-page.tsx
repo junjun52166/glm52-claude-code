@@ -5,7 +5,9 @@ import { trackEvent } from "@/lib/analytics";
 
 const configSnippet = `{
   "env": {
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-5.2[1m]",
+    "ANTHROPIC_AUTH_TOKEN": "your_zai_api_key",
+    "ANTHROPIC_BASE_URL": "https://api.z.ai/api/anthropic",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "glm-4.5-air",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "glm-5.2[1m]",
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "glm-5.2[1m]",
     "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "1000000"
@@ -57,10 +59,31 @@ function Section({
   );
 }
 
-function CodeBlock({ code, language }: { code: string; language: string }) {
+function CodeBlock({
+  code,
+  language,
+  onCopy,
+  copyLabel,
+}: {
+  code: string;
+  language: string;
+  onCopy?: () => void;
+  copyLabel?: string;
+}) {
   return (
     <div className="overflow-x-auto rounded-[1.5rem] border border-[var(--line)] bg-[#201916] p-4 text-sm text-[#f6ecdf] md:p-5 md:text-[15px]">
-      <div className="mb-3 text-xs uppercase tracking-[0.24em] text-[#d5b8a2]">{language}</div>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="text-xs uppercase tracking-[0.24em] text-[#d5b8a2]">{language}</div>
+        {onCopy ? (
+          <button
+            type="button"
+            onClick={onCopy}
+            className="rounded-full border border-white/15 bg-white/8 px-3 py-1 text-xs font-medium text-[#f6ecdf] transition hover:bg-white/14"
+          >
+            {copyLabel ?? "Copy"}
+          </button>
+        ) : null}
+      </div>
       <pre className="m-0 whitespace-pre">{code}</pre>
     </div>
   );
@@ -141,6 +164,27 @@ export function LandingPage() {
     } catch {
       setCopied(false);
       setCopyMessage("Copy failed. Select the JSON block below and copy it manually.");
+      window.setTimeout(() => setCopyMessage(""), 3200);
+    }
+  };
+
+  const copyPlainText = async (
+    text: string,
+    successMessage: string,
+    eventName: string,
+    eventArea: string,
+  ) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyMessage(successMessage);
+      trackEvent(eventName, {
+        event_area: eventArea,
+        model: "glm-5.2",
+        tool: "claude-code",
+      });
+      window.setTimeout(() => setCopyMessage(""), 2600);
+    } catch {
+      setCopyMessage("Copy failed. Please copy the command manually.");
       window.setTimeout(() => setCopyMessage(""), 3200);
     }
   };
@@ -250,6 +294,9 @@ export function LandingPage() {
                 This page is for one narrow job: if you use Claude Code CLI and need
                 a temporary Fable 5 fallback, it shows the exact GLM-5.2 alias config,
                 what else must already be set up, and how to undo the change cleanly.
+                It also reflects the two questions people ask most right now: how to
+                get long-context coding with <code className="mx-1">glm-5.2[1m]</code>,
+                and how to avoid wasting quota on lighter tasks.
               </p>
               <p className="mt-5 max-w-3xl rounded-[1.5rem] border border-[var(--line)] bg-white/60 px-5 py-4 text-sm leading-7 text-[var(--ink)] md:text-base">
                 Using Claude in the web app, desktop app, or mobile app? You probably
@@ -309,11 +356,18 @@ export function LandingPage() {
               Code, this page shows how to try GLM-5.2 as a temporary replacement,
               with backup and rollback steps.
             </p>
+            <p className="rounded-[1.5rem] border border-[var(--line)] bg-[var(--accent-soft)] px-5 py-4 text-[var(--ink)]">
+              Right now, the highest-interest GLM-5.2 topics are long-context coding,
+              Claude Code fallback setup after Fable 5, and quota-conscious routing:
+              use GLM-5.2 for hard tasks, keep cheaper routing for lighter work.
+            </p>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-[1.5rem] border border-[var(--line)] bg-white/60 p-5">
                 <h3 className="text-lg text-[var(--ink)]">You can use this page to</h3>
                 <ul className="mt-3 list-disc space-y-2 pl-5">
                   <li>Copy a ready-to-paste GLM-5.2 alias block for Claude Code</li>
+                  <li>Route long-context work to <code>glm-5.2[1m]</code></li>
+                  <li>Keep lightweight traffic on a cheaper model for quota control</li>
                   <li>Check the prerequisites before you edit settings.json</li>
                   <li>Back up, verify, and roll back safely if the test fails</li>
                 </ul>
@@ -359,7 +413,19 @@ export function LandingPage() {
           </Section>
 
           <Section eyebrow="Step 1" title="Backup your current Claude Code settings">
-            <CodeBlock code={backupCommand} language="bash" />
+            <CodeBlock
+              code={backupCommand}
+              language="bash"
+              onCopy={() =>
+                copyPlainText(
+                  backupCommand,
+                  "Backup command copied.",
+                  "backup_command_copy",
+                  "backup",
+                )
+              }
+              copyLabel="Copy backup command"
+            />
             <p>
               If the file does not exist yet, create it first or follow the official
               Claude Code settings documentation for your environment.
@@ -367,13 +433,33 @@ export function LandingPage() {
           </Section>
 
           <Section eyebrow="Step 2" title="Add GLM-5.2 alias mapping">
-            <CodeBlock code={configSnippet} language="json" />
+            <CodeBlock
+              code={configSnippet}
+              language="json"
+              onCopy={handleCopy}
+              copyLabel={copied ? "Copied ✓" : "Copy config"}
+            />
             <ul className="list-disc space-y-2 pl-5">
-              <li>This maps Claude Code aliases to <code>glm-5.2[1m]</code>.</li>
-              <li>This does not replace your provider API key or base URL setup.</li>
+              <li>This sets the required Z.ai base URL and API token fields.</li>
+              <li>This maps Sonnet and Opus to <code>glm-5.2[1m]</code>.</li>
+              <li>This keeps Haiku on <code>glm-4.5-air</code> to avoid wasting quota.</li>
+              <li>This is the safer default if you want 1M-context coding without routing every tiny task to the expensive model.</li>
               <li>Third-party provider behavior may differ from Anthropic-native models.</li>
               <li>Test this on a non-critical project first.</li>
             </ul>
+          </Section>
+
+          <Section eyebrow="Why This Routing" title="Why not point every alias to GLM-5.2?">
+            <p>
+              Because Claude Code uses smaller internal tasks too. If you route every
+              alias to <code>glm-5.2[1m]</code>, even lightweight helper work may burn
+              higher-cost quota.
+            </p>
+            <p>
+              The default on this page is a quota-conscious setup: keep the stronger
+              long-context model for Sonnet and Opus style work, and leave Haiku on a
+              cheaper, faster route.
+            </p>
           </Section>
 
           <Section eyebrow="Step 3" title="Confirm your active configuration">
@@ -388,7 +474,19 @@ export function LandingPage() {
           </Section>
 
           <Section eyebrow="Step 4" title="Roll back if anything breaks">
-            <CodeBlock code={rollbackCommand} language="bash" />
+            <CodeBlock
+              code={rollbackCommand}
+              language="bash"
+              onCopy={() =>
+                copyPlainText(
+                  rollbackCommand,
+                  "Rollback command copied.",
+                  "rollback_command_copy",
+                  "rollback",
+                )
+              }
+              copyLabel="Copy rollback command"
+            />
             <p>Replace <code>YYYY-MM-DD</code> with your actual backup date.</p>
           </Section>
 
